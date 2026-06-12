@@ -1,118 +1,142 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
     
-    // ==========================================
-    // 1. CONTEXTO DE CONTROLE DE FONTES
-    // ==========================================
-    let currentFontSize = 100; // Valor percentual base
-    const baseHtml = document.documentElement;
-
-    document.getElementById('btn-increase-font').addEventListener('click', () => {
-        if (currentFontSize < 140) {
-            currentFontSize += 10;
-            baseHtml.style.fontSize = `${currentFontSize}%`;
-        }
-    });
-
-    document.getElementById('btn-decrease-font').addEventListener('click', () => {
-        if (currentFontSize > 80) {
-            currentFontSize -= 10;
-            baseHtml.style.fontSize = `${currentFontSize}%`;
-        }
-    });
-
-    // ==========================================
-    // 2. ALTERNADOR DE TEMA (CONTRASTE)
-    // ==========================================
-    const toggleThemeBtn = document.getElementById('btn-toggle-theme');
-    toggleThemeBtn.addEventListener('click', () => {
-        document.body.classList.toggle('light-contrast');
-    });
-
-    // ==========================================
-    // 3. LEITURA POR VOZ AVANÇADA (SPEECH SYNTHESIS)
-    // ==========================================
-    const startVoiceBtn = document.getElementById('btn-start-voice');
-    const stopVoiceBtn = document.getElementById('btn-stop-voice');
-    let speechUtterance = null;
-
-    startVoiceBtn.addEventListener('click', () => {
-        // Zera leituras anteriores ativas
-        window.speechSynthesis.cancel();
-
-        // Seleciona exclusivamente o container principal do artigo
-        const mainContentElement = document.getElementById('content-core');
-        if (!mainContentElement) return;
-
-        // Filtra e junta apenas as strings textuais legíveis
-        const textBlocks = Array.from(mainContentElement.querySelectorAll('p, h2, h3, .accordion-trigger'))
-            .map(el => el.textContent)
-            .join(' ');
-
-        if (textBlocks.trim().length === 0) return;
-
-        speechUtterance = new SpeechSynthesisUtterance(textBlocks);
-        speechUtterance.lang = 'pt-BR';
-        speechUtterance.rate = 1.0;
-
-        window.speechSynthesis.speak(speechUtterance);
-    });
-
-    stopVoiceBtn.addEventListener('click', () => {
-        window.speechSynthesis.cancel();
-    });
-
-    // ==========================================
-    // 4. MÓDULOS EXPANSÍVEIS (ACCORDIONS)
-    // ==========================================
-    const accordionTriggers = document.querySelectorAll('.accordion-trigger');
-
-    accordionTriggers.forEach(trigger => {
-        trigger.addEventListener('click', () => {
-            const isExpanded = trigger.getAttribute('aria-expanded') === 'true';
-            const content = trigger.nextElementSibling;
-            const icon = trigger.querySelector('.accordion-icon');
-
-            trigger.setAttribute('aria-expanded', !isExpanded);
-            content.hidden = isExpanded;
-
+    // ==========================================================================
+    // SISTEMA DE SEÇÕES EXPANSÍVEIS (ACCORDION)
+    // ==========================================================================
+    const accordionHeaders = document.querySelectorAll(".accordion-header");
+    
+    accordionHeaders.forEach(header => {
+        header.addEventListener("click", () => {
+            const item = header.parentElement;
+            const content = item.querySelector(".accordion-content");
+            const isExpanded = header.getAttribute("aria-expanded") === "true";
+            
+            header.setAttribute("aria-expanded", !isExpanded);
             if (!isExpanded) {
-                icon.textContent = '-';
-                content.style.display = 'block';
+                content.style.display = "block";
+                item.classList.add("active");
+                header.querySelector(".acc-icon").textContent = "−";
             } else {
-                icon.textContent = '+';
-                content.style.display = 'none';
+                content.style.display = "none";
+                item.classList.remove("active");
+                header.querySelector(".acc-icon").textContent = "+";
             }
         });
     });
 
-    // ==========================================
-    // 5. CAIXA DE TRANSMISSÃO DE COMENTÁRIOS
-    // ==========================================
-    const commentForm = document.getElementById('comment-form');
-    const commentInput = document.getElementById('reader-comment');
-    const commentsBox = document.getElementById('comments-box');
-    const statusLog = document.getElementById('comment-status');
-    let userIndex = 100;
-
-    commentForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const text = commentInput.value.trim();
-
-        if (text) {
-            userIndex++;
-            statusLog.textContent = '> TRANSMISSÃO EM ANDAMENTO... CONECTANDO TERMINAL AGROFORTE...';
-            
-            setTimeout(() => {
-                const newNode = document.createElement('div');
-                newNode.className = 'comment-node';
-                newNode.innerHTML = `<span class="node-user">SYS_USER_${userIndex}:</span> ${text}`;
-                
-                // Insere no topo da árvore de comentários
-                commentsBox.insertBefore(newNode, commentsBox.firstChild);
-                
-                commentInput.value = '';
-                statusLog.textContent = '';
-            }, 800);
+    // ==========================================================================
+    // CONTROLES DE ACESSIBILIDADE - DIMENSIONAMENTO DE FONTE
+    // ==========================================================================
+    let currentFontSizePercent = 100;
+    const btnIncreaseFont = document.getElementById("btn-increase-font");
+    const btnDecreaseFont = document.getElementById("btn-decrease-font");
+    
+    btnIncreaseFont.addEventListener("click", () => {
+        if (currentFontSizePercent < 130) {
+            currentFontSizePercent += 10;
+            document.documentElement.style.fontSize = `${currentFontSizePercent}%`;
         }
     });
+    
+    btnDecreaseFont.addEventListener("click", () => {
+        if (currentFontSizePercent > 80) {
+            currentFontSizePercent -= 10;
+            document.documentElement.style.fontSize = `${currentFontSizePercent}%`;
+        }
+    });
+
+    // ==========================================================================
+    // CONTROLES DE ACESSIBILIDADE - ALTERNAÇÃO DE TEMA (CLARO/ESCURO)
+    // ==========================================================================
+    const btnToggleTheme = document.getElementById("btn-toggle-theme");
+    btnToggleTheme.addEventListener("click", () => {
+        document.body.classList.toggle("light-theme");
+    });
+
+    // ==========================================================================
+    // CONTROLES DE ACESSIBILIDADE - LEITURA POR VOZ (SpeechSynthesis API)
+    // ==========================================================================
+    const btnSpeechStart = document.getElementById("btn-speech-start");
+    const btnSpeechStop = document.getElementById("btn-speech-stop");
+    let currentUtterance = null;
+
+    btnSpeechStart.addEventListener("click", () => {
+        window.speechSynthesis.cancel();
+        
+        const mainContentElement = document.getElementById("main-content");
+        if (!mainContentElement) return;
+        
+        const textToRead = mainContentElement.innerText;
+        
+        currentUtterance = new SpeechSynthesisUtterance(textToRead);
+        currentUtterance.lang = "pt-BR";
+        currentUtterance.rate = 1.0; 
+        
+        btnSpeechStart.style.borderColor = "var(--color-yellow)";
+        
+        currentUtterance.onend = () => {
+            btnSpeechStart.style.borderColor = "transparent";
+        };
+        currentUtterance.onerror = () => {
+            btnSpeechStart.style.borderColor = "transparent";
+        };
+
+        window.speechSynthesis.speak(currentUtterance);
+    });
+
+    btnSpeechStop.addEventListener("click", () => {
+        window.speechSynthesis.cancel();
+        btnSpeechStart.style.borderColor = "transparent";
+    });
+
+    // ==========================================================================
+    // ÁREA DE INTERAÇÃO - SUBMISSÃO DINÂMICA DE COMENTÁRIOS
+    // ==========================================================================
+    const commentForm = document.getElementById("comment-form");
+    const txtComment = document.getElementById("txt-comment");
+    const commentsBox = document.getElementById("comments-box");
+    const successMsg = document.getElementById("comment-success-msg");
+
+    commentForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        
+        const text = txtComment.value.trim();
+        
+        if (text.length < 10) {
+            alert("A análise técnica precisa conter pelo menos 10 caracteres para indexação externa.");
+            return;
+        }
+
+        const newCommentItem = document.createElement("div");
+        newCommentItem.className = "comment-item";
+        
+        const now = new Date();
+        const timeString = now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+
+        newCommentItem.innerHTML = `
+            <span class="comment-author">OPERADOR_ANÔNIMO</span>
+            <span class="comment-date">Hoje, às ${timeString}</span>
+            <p class="comment-text">${escapeHTML(text)}</p>
+        `;
+        
+        commentsBox.insertBefore(newCommentItem, commentsBox.firstChild);
+        txtComment.value = "";
+        successMsg.removeAttribute("hidden");
+        
+        setTimeout(() => {
+            successMsg.setAttribute("hidden", "true");
+        }, 5000);
+    });
+
+    function escapeHTML(str) {
+        return str.replace(/[&<>'"]/g, 
+            tag => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                "'": '&#39;',
+                '"': '&quot;'
+            }[tag] || tag)
+        );
+    }
 });
